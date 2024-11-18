@@ -1,0 +1,13 @@
+package = yoga
+headers = yoga/Yoga.h
+compilerOpts = -Ibuild/yoga/headers
+
+libraryPaths.linux_x64 = build/yoga/linux-x64
+libraryPaths.linux_arm64 = build/yoga/linux-arm64
+libraryPaths.mingw_x64 = build/yoga/windows-x64
+libraryPaths.macos_x64 = build/yoga/macos-x64
+libraryPaths.macos_arm64 = build/yoga/macos-arm64
+
+staticLibraries.linux = libyogacore.a
+staticLibraries.macos = libyogacore.a
+staticLibraries.mingw = yogacore.lib
