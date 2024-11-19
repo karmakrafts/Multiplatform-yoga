@@ -21,6 +21,7 @@ import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.notExists
+import kotlin.io.path.createDirectories
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
