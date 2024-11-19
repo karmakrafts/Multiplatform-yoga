@@ -39,9 +39,16 @@ java {
 
 operator fun DirectoryProperty.div(name: String): Path = get().asFile.toPath() / name
 
+val ensureBuildDirectory: Task = tasks.create("ensureBuildDirectory") {
+    val path = layout.buildDirectory.get().asFile.toPath()
+    doLast { path.createDirectories() }
+    onlyIf { path.notExists() }
+}
+
 fun downloadYogaBinariesTask(platform: String, arch: String): Download =
     tasks.create<Download>("downloadYogaBinaries${platform.capitalized()}${arch.capitalized()}") {
         group = "yogaBinaries"
+        dependsOn(ensureBuildDirectory)
         val fileName = "build-$platform-$arch-debug.zip"
         src("https://git.karmakrafts.dev/api/v4/projects/339/packages/generic/build/${libs.versions.yoga.get()}/$fileName")
         val destPath = layout.buildDirectory / "yoga" / fileName
@@ -50,11 +57,11 @@ fun downloadYogaBinariesTask(platform: String, arch: String): Download =
         onlyIf { destPath.notExists() }
     }
 
-val downloadSdlBinariesWindowsX64: Download = downloadYogaBinariesTask("windows", "x64")
-val downloadSdlBinariesLinuxX64: Download = downloadYogaBinariesTask("linux", "x64")
-val downloadSdlBinariesLinuxArm64: Download = downloadYogaBinariesTask("linux", "arm64")
-val downloadSdlBinariesMacosX64: Download = downloadYogaBinariesTask("macos", "x64")
-val downloadSdlBinariesMacosArm64: Download = downloadYogaBinariesTask("macos", "arm64")
+val downloadYogaBinariesWindowsX64: Download = downloadYogaBinariesTask("windows", "x64")
+val downloadYogaBinariesLinuxX64: Download = downloadYogaBinariesTask("linux", "x64")
+val downloadYogaBinariesLinuxArm64: Download = downloadYogaBinariesTask("linux", "arm64")
+val downloadYogaBinariesMacosX64: Download = downloadYogaBinariesTask("macos", "x64")
+val downloadYogaBinariesMacosArm64: Download = downloadYogaBinariesTask("macos", "arm64")
 
 fun extractYogaBinariesTask(platform: String, arch: String): Copy =
     tasks.create<Copy>("extractYogaBinaries${platform.capitalized()}${arch.capitalized()}") {
@@ -68,23 +75,24 @@ fun extractYogaBinariesTask(platform: String, arch: String): Copy =
         onlyIf { destPath.notExists() }
     }
 
-val extractSdlBinariesWindowsX64: Copy = extractYogaBinariesTask("windows", "x64")
-val extractSdlBinariesLinuxX64: Copy = extractYogaBinariesTask("linux", "x64")
-val extractSdlBinariesLinuxArm64: Copy = extractYogaBinariesTask("linux", "arm64")
-val extractSdlBinariesMacosX64: Copy = extractYogaBinariesTask("macos", "x64")
-val extractSdlBinariesMacosArm64: Copy = extractYogaBinariesTask("macos", "arm64")
+val extractYogaBinariesWindowsX64: Copy = extractYogaBinariesTask("windows", "x64")
+val extractYogaBinariesLinuxX64: Copy = extractYogaBinariesTask("linux", "x64")
+val extractYogaBinariesLinuxArm64: Copy = extractYogaBinariesTask("linux", "arm64")
+val extractYogaBinariesMacosX64: Copy = extractYogaBinariesTask("macos", "x64")
+val extractYogaBinariesMacosArm64: Copy = extractYogaBinariesTask("macos", "arm64")
 
 val extractYogaBinaries: Task = tasks.create("extractYogaBinaries") {
     group = "yogaBinaries"
-    dependsOn(extractSdlBinariesWindowsX64)
-    dependsOn(extractSdlBinariesLinuxX64)
-    dependsOn(extractSdlBinariesLinuxArm64)
-    dependsOn(extractSdlBinariesMacosX64)
-    dependsOn(extractSdlBinariesMacosArm64)
+    dependsOn(extractYogaBinariesWindowsX64)
+    dependsOn(extractYogaBinariesLinuxX64)
+    dependsOn(extractYogaBinariesLinuxArm64)
+    dependsOn(extractYogaBinariesMacosX64)
+    dependsOn(extractYogaBinariesMacosArm64)
 }
 
 val downloadYogaHeaders: Exec = tasks.create<Exec>("downloadYogaHeaders") {
     group = "yogaHeaders"
+    dependsOn(ensureBuildDirectory)
     workingDir = layout.buildDirectory.get().asFile
     commandLine("git", "clone", "--branch", libs.versions.yoga.get(), "--single-branch", "https://github.com/facebook/yoga", "yoga/headers")
     onlyIf { (layout.buildDirectory / "yoga" / "headers").notExists() }
@@ -128,7 +136,7 @@ tasks {
             reportUndocumented = false
             jdkVersion = java.toolchain.languageVersion.get().asInt()
             noAndroidSdkLink = true
-            externalDocumentationLink("https://docs.karmakrafts.dev/multiplatform-sdl")
+            externalDocumentationLink("https://docs.karmakrafts.dev${rootProject.name}")
         }
     }
     System.getProperty("publishDocs.root")?.let { docsDir ->
@@ -161,7 +169,7 @@ publishing {
             artifact(dokkaJar)
             pom {
                 name = project.name
-                description = "Multiplatform bindings for SDL3 on Linux, Windows and macOS."
+                description = "Multiplatform bindings for the Yoga layout engine on Linux, Windows and macOS."
                 url = System.getenv("CI_PROJECT_URL")
                 licenses {
                     license {
