@@ -1,4 +1,4 @@
-package = yoga
+package = io.karma.yoga
 headers = yoga/Yoga.h
 compilerOpts = -Ibuild/yoga/headers
 
